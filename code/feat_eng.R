@@ -29,7 +29,7 @@ data.frame("value" = sapply(
 
 #list with predicator variables
 feats = list(
-    #create dfs for specific variable set 
+    #create dfs for specific variable set - can be altered as needed
     sjt = train %>% 
         select(sj_most_1:sj_time_9) %>% 
         select_at(vars(-contains("time"))), 
@@ -44,8 +44,12 @@ feats = list(
     
     pscale = select_at(train, vars(contains("pscale"))), 
     
+    #overall_rating:retained columns
     crit_vars = train[, 2:9])
 
+#descriptive summary statistics for all features
+# sapply(feats, function(x) sum(is.na(x)))
+sapply(feats, function(x) summary.data.frame(x))
 
 library(psych) #masks ggplot2::%+%, alpha
 
@@ -53,15 +57,16 @@ library(psych) #masks ggplot2::%+%, alpha
 featsCorrs = lapply(feats[-7], 
                        function(x) psych::corr.test(x, use = "pairwise"))
 
-#compute polychoric correlations foe criterion variables
+#compute polychoric correlations for criterion variables
 featsCorrs[["crit_vars"]] = polychoric(feats[["crit_vars"]], na.rm = TRUE)
+#only 28 cells used continuity correction, so estimates pretty stable
 
 #visualize correlation tables
 library(GGally) #masks dplyr::nasa
 
 # plot function for correlations
 corrPlots = lapply(
-    featsCorrs[-7], 
+    featsCorrs[-7], #disregard crit_vars here
     function(df) {
         ggcorr(data = NULL,
                cor_matrix = df[["r"]],
@@ -80,7 +85,7 @@ corrPlots = lapply(
         })
 
 #add criterion variables to list of correlations
-corrPlots[["crit_vars"]] = ggcorr(#data = feats[[7]], 
+corrPlots[["crit_vars"]] = ggcorr(data = NULL,
                                  #method = c("pairwise", "pearson"), 
                                  cor_matrix = featsCorrs[[7]][["rho"]],
                                  size = 3, 
@@ -93,6 +98,10 @@ corrPlots[["crit_vars"]] = ggcorr(#data = feats[[7]],
                                  label_round = 2, 
                                  label_size = 2) + 
                                     theme(legend.position = "none")
+
+# ggsave("tough.svg", path = "../figs/corrPlot-crit_vars.svg")
+
+
 
 
 
