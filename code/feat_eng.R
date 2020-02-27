@@ -5,7 +5,7 @@ rm(list = ls()) #keep env clean
 #set working dir - shortcut = ctrl + shift + H
 
 #load libraries
-library(tidyverse) #dplyr masks stats::filter, lag
+library(tidyverse, quietly = TRUE) #dplyr masks stats::filter, lag
 
 #load data from github repo
 datFile = "https://raw.githubusercontent.com/dkgreen24/siop-ml-competition/master/data/train.csv"
@@ -28,39 +28,40 @@ data.frame("value" = sapply(
 #varNames = names(train)
 
 #list with predicator variables
-predVars = list()
+feats = list(
+    #create dfs for specific variable set 
+    sjt = train %>% 
+        select(sj_most_1:sj_time_9) %>% 
+        select_at(vars(-contains("time"))), 
+    
+    sjt_time = select_at(train, vars(contains("sj_time"))), #seconds
+    
+    scene1 = select_at(train, vars(contains("scenario1"))), 
+    
+    scene2 = select_at(train, vars(contains("scenario2"))), 
+    
+    bio = select_at(train, vars(contains("bio"))), 
+    
+    pscale = select_at(train, vars(contains("pscale"))), 
+    
+    crit_vars = train[, 2:9])
 
-#create dfs for specific variable sets
-predVars[["sjt"]] = train %>% 
-    select(sj_most_1:sj_time_9) %>% 
-    select_at(vars(-contains("time")))
-
-predVars[["sjt_time"]] = select_at(train, vars(contains("sj_time"))) #seconds
-
-predVars[["scene1"]] = select_at(train, vars(contains("scenario1"))) 
-
-predVars[["scene2"]] = select_at(train, vars(contains("scenario2")))
-
-predVars[["bio"]] = select_at(train, vars(contains("bio")))
-
-predVars[["pscale"]] = select_at(train, vars(contains("pscale")))
-
-predVars[["adv_imp"]] = select(train, protected_group)
-
-critVars = select(train, 2:7) #only first 7,890 obs have data
 
 library(psych) #masks ggplot2::%+%, alpha
 
 #compute correlations
-predVars_cors = lapply(predVars[-7], 
+featsCorrs = lapply(feats[-7], 
                        function(x) psych::corr.test(x, use = "pairwise"))
 
+#compute polychoric correlations foe criterion variables
+featsCorrs[["crit_vars"]] = polychoric(feats[["crit_vars"]], na.rm = TRUE)
 
+#visualize correlation tables
 library(GGally) #masks dplyr::nasa
 
 # plot function for correlations
 corrPlots = lapply(
-    predVars_cors, 
+    featsCorrs[-7], 
     function(df) {
         ggcorr(data = NULL,
                cor_matrix = df[["r"]],
@@ -72,15 +73,16 @@ corrPlots = lapply(
                label = TRUE, 
                label_color = "black",
                digits = 2,
-               #label_alpha = .3, 
+               #angle = -45, 
                label_round = 2, 
                label_size = 2) + 
                     theme(legend.position = "none")
         })
 
 #add criterion variables to list of correlations
-corrPlots[["critVars"]] = ggcorr(data = critVars, 
-                                 method = c("pairwise", "pearson"), 
+corrPlots[["crit_vars"]] = ggcorr(#data = feats[[7]], 
+                                 #method = c("pairwise", "pearson"), 
+                                 cor_matrix = featsCorrs[[7]][["rho"]],
                                  size = 3, 
                                  hjust = .75, 
                                  nbreaks = 11, 
@@ -91,3 +93,8 @@ corrPlots[["critVars"]] = ggcorr(data = critVars,
                                  label_round = 2, 
                                  label_size = 2) + 
                                     theme(legend.position = "none")
+
+
+
+
+
