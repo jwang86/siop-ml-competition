@@ -18,12 +18,12 @@ train = read_csv(datFile) %>%
 #     rename_all(list(tolower))
 
 #count of missingness
-data.frame("value" = sapply(
+(missing.stats <- data.frame("value" = sapply(
     train, function(x) {
         sum(is.na(x))
         }
     )) %>%
-    rownames_to_column(var = "item")
+    rownames_to_column(var = "item"))
 
 #varNames = names(train)
 
@@ -101,9 +101,43 @@ corrPlots[["crit_vars"]] = ggcorr(data = NULL,
 
 # ggsave("tough.svg", path = "../figs/corrPlot-crit_vars.svg")
 
+# personality subscales
+pscale = list(
+  #create dfs for each personality subscale
+  pscale1 = select_at(feats$pscale, vars(contains("pscale01"))),
+  pscale2 = select_at(feats$pscale, vars(contains("pscale02"))),
+  pscale3 = select_at(feats$pscale, vars(contains("pscale03"))),
+  pscale4 = select_at(feats$pscale, vars(contains("pscale04"))),
+  pscale5 = select_at(feats$pscale, vars(contains("pscale05"))),
+  pscale6 = select_at(feats$pscale, vars(contains("pscale06"))),
+  pscale7 = select_at(feats$pscale, vars(contains("pscale07"))),
+  pscale8 = select_at(feats$pscale, vars(contains("pscale08"))),
+  pscale9 = select_at(feats$pscale, vars(contains("pscale09"))),
+  pscale10 = select_at(feats$pscale, vars(contains("pscale10"))),
+  pscale11 = select_at(feats$pscale, vars(contains("pscale11"))),
+  pscale12 = select_at(feats$pscale, vars(contains("pscale12"))),
+  pscale13 = select_at(feats$pscale, vars(contains("pscale13"))))
 
+# compute correlations for each personality subscale
+pscaleCorrs = lapply(pscale, 
+                    function(x) psych::corr.test(x, use = "pairwise"))
 
-
-
-
-
+# plot personality subscale correlations
+pscale.corrPlots = lapply(
+  pscaleCorrs,
+  function(df) {
+    ggcorr(data = NULL,
+           cor_matrix = df[["r"]],
+           #method = c("pairwise", "pearson"),
+           size = 3,
+           hjust = .75,
+           nbreaks = 11,
+           palette = "RdBu",
+           label = TRUE, 
+           label_color = "black",
+           digits = 2,
+           #angle = -45, 
+           label_round = 2, 
+           label_size = 2) + 
+      theme(legend.position = "none")
+  })
