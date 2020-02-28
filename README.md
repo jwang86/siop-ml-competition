@@ -44,16 +44,16 @@ This is open to all!
 
 ## NOTES
 Items that needs to be reverse coded:
-*pscale01: q2, q3
-*pscale02: q2
-*pscale03: q1
-*pscale04: q1
-*pscale05: na
-*pscale06: q3, q6
-*pscale07: q2
-*pscale08: q2, q4
-*pscale09: q2
-*pscale10: q3, q4
-*pscale11: q2, q3
-*pscale12: q3, q4
-*pscale13: q3, q4
+* pscale01: q2, q3
+* pscale02: q2
+* pscale03: q1
+* pscale04: q1
+* pscale05: na
+* pscale06: q3, q6
+* pscale07: q2
+* pscale08: q2, q4
+* pscale09: q2
+* pscale10: q3, q4
+* pscale11: q2, q3
+* pscale12: q3, q4
+* pscale13: q3, q4
