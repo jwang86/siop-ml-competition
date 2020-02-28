@@ -23,23 +23,23 @@ This is open to all!
 ## PROGRESS CHECK
 
 ### Readings
-- [] Read MOO & GPareto articles **[here](https://drive.google.com/drive/u/0/folders/1sm5aJdyIsk_2Rp4CdAtab7duamQWFXCg)**
-- [] Read task and data description **[here](https://drive.google.com/file/d/1_Ve4jRoYsj5GB62_9BXdJGjstl_2KsZ5/view)**
+- [ ] Read MOO & GPareto articles **[here](https://drive.google.com/drive/u/0/folders/1sm5aJdyIsk_2Rp4CdAtab7duamQWFXCg)**
+- [ ] Read task and data description **[here](https://drive.google.com/file/d/1_Ve4jRoYsj5GB62_9BXdJGjstl_2KsZ5/view)**
 
 ### Data Processing
 * Look at item descriptives
 - [x] Item descriptives for all variables
 - [x] Look at correlation among criteria & fairness
 - [x] Run correlation/alpha to identify reverse coded items/remove bad items
-- [] How predictors relate to criteria and fairness
+- [ ] How predictors relate to criteria and fairness
 * Create composite variables
-- [] Personality subscales
+- [ ] Personality subscales
 
 ### MOO
-- [] Create pareto space
-- [] Get results for pareto space
-- [] Sort results
-- [] Run GPareto
+- [ ] Create pareto space
+- [ ] Get results for pareto space
+- [ ] Sort results
+- [ ] Run GPareto
 
 
 ## NOTES
