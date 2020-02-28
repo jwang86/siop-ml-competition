@@ -141,3 +141,91 @@ pscale.corrPlots = lapply(
            label_size = 2) + 
       theme(legend.position = "none")
   })
+
+# export plots
+for (i in 1:length(pscale.names)){
+  pscale.corrPlots[i]
+  ggsave(file=paste0("figs/corrPlot-psubscales/",pscale.names[i],".png"))
+}
+
+"Items that needs to be reverse coded:
+pscale01: q2, q3
+pscale02: q2
+pscale03: q1
+pscale04: q1
+pscale05: na
+pscale06: q3, q6
+pscale07: q2
+pscale08: q2, q4
+pscale09: q2
+pscale10: q3, q4
+pscale11: q2, q3
+pscale12: q3, q4
+pscale13: q3, q4
+"
+# reverse code personality items
+keys <- rep(1,55)  # key filler
+keys[c(2,3,6,9,13,23,26,28,32,34,36,41,42,44,45,49,50,53,54)] <- -1 # index of reversed items
+pscale.reversed <- as.data.frame(reverse.code(keys,feats$pscale))
+
+# group processed items & check correlations
+psubscales.reversed = list(
+  #create dfs for each personality subscale
+  pscale1 = select_at(pscale.reversed, vars(contains("pscale01"))),
+  pscale2 = select_at(pscale.reversed, vars(contains("pscale02"))),
+  pscale3 = select_at(pscale.reversed, vars(contains("pscale03"))),
+  pscale4 = select_at(pscale.reversed, vars(contains("pscale04"))),
+  pscale5 = select_at(pscale.reversed, vars(contains("pscale05"))),
+  pscale6 = select_at(pscale.reversed, vars(contains("pscale06"))),
+  pscale7 = select_at(pscale.reversed, vars(contains("pscale07"))),
+  pscale8 = select_at(pscale.reversed, vars(contains("pscale08"))),
+  pscale9 = select_at(pscale.reversed, vars(contains("pscale09"))),
+  pscale10 = select_at(pscale.reversed, vars(contains("pscale10"))),
+  pscale11 = select_at(pscale.reversed, vars(contains("pscale11"))),
+  pscale12 = select_at(pscale.reversed, vars(contains("pscale12"))),
+  pscale13 = select_at(pscale.reversed, vars(contains("pscale13"))))
+
+pscaleReversedCorrs = lapply(psubscales.reversed, 
+                     function(x) psych::corr.test(x, use = "pairwise"))
+
+pscale.reversed.corrPlots = lapply(
+  pscaleReversedCorrs,
+  function(df) {
+    ggcorr(data = NULL,
+           cor_matrix = df[["r"]],
+           #method = c("pairwise", "pearson"),
+           size = 3,
+           hjust = .75,
+           nbreaks = 11,
+           palette = "RdBu",
+           label = TRUE, 
+           label_color = "black",
+           digits = 2,
+           #angle = -45, 
+           label_round = 2, 
+           label_size = 2) + 
+      theme(legend.position = "none")
+  }) 
+######everything looks good######
+
+# export graphs
+for (i in 1:length(pscale.names)){
+  pscale.reversed.corrPlots[i]
+  ggsave(file=paste0("figs/corrPlot-psubscales-reversed/",pscale.names[i],".png"))
+}
+
+# make 13 composite scores and put back to feats
+feats$pcomp <- as.data.frame(do.call(cbind, lapply(psubscales.reversed, function(x) rowMeans(x))))
+
+# write each feature as a separate sheet 
+# save into one xslx file
+library(openxlsx)
+feat.names <- names(feats)
+
+wb <- createWorkbook()
+for (i in 1:length(feat.names)){
+  addWorksheet(wb, feat.names[i])
+  writeData(wb, feat.names[i], feats[[i]])
+}
+saveWorkbook(wb, file = "data/features.xlsx", overwrite = TRUE)
+

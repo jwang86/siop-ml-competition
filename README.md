@@ -30,10 +30,14 @@ This is open to all!
 * Look at item descriptives
 - [x] Item descriptives for all variables
 - [x] Look at correlation among criteria & fairness
-- [x] Run correlation/alpha to identify reverse coded items/remove bad items
+- [x] Run correlation to identify reverse coded items
+- [ ] Look at correlation/run alpha to remove bad items
 - [ ] How predictors relate to criteria and fairness
-* Create composite variables
-- [ ] Personality subscales
+* Process variables
+- [x] Personality composite subscales
+- [x] Seperate sheet for each predictor
+- [x] All criteria & fairness in one sheet
+
 
 ### MOO
 - [ ] Create pareto space
