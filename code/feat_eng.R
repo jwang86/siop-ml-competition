@@ -2,10 +2,13 @@
 
 rm(list = ls()) #keep env clean
 
-#set working dir - shortcut = ctrl + shift + H
+#set working dir to 'code' folder - shortcut = ctrl + shift + H
 
 #load libraries
 library(tidyverse) #dplyr masks stats::filter, lag
+
+#source script of functions
+source("funs.R")
 
 #load data from github repo
 datFile = "https://raw.githubusercontent.com/dkgreen24/siop-ml-competition/master/data/train.csv"
@@ -64,42 +67,10 @@ featsCorrs[["crit_vars"]] = polychoric(feats[["crit_vars"]], na.rm = TRUE)
 #visualize correlation tables
 library(GGally) #masks dplyr::nasa
 
-# plot function for correlations
-corrPlots = lapply(
-    featsCorrs[-7], #disregard crit_vars here
-    function(df) {
-        ggcorr(data = NULL,
-               cor_matrix = df[["r"]],
-               #method = c("pairwise", "pearson"),
-               size = 3,
-               hjust = .75,
-               nbreaks = 11,
-               palette = "RdBu",
-               label = TRUE, 
-               label_color = "black",
-               digits = 2,
-               #angle = -45, 
-               label_round = 2, 
-               label_size = 2) + 
-                    theme(legend.position = "none")
-        })
+# plot correlations using funs.R script - extract ONLY correlations!
+corrPlots = lapply(featsCorrs[-7], function(x) corrPlot_func(x[["r"]]))
+corrPlots[["crit_vars"]] = corrPlot_func(featsCorrs[[7]][["rho"]]) #polychoric
 
-#add criterion variables to list of correlations
-corrPlots[["crit_vars"]] = ggcorr(data = NULL,
-                                 #method = c("pairwise", "pearson"), 
-                                 cor_matrix = featsCorrs[[7]][["rho"]],
-                                 size = 3, 
-                                 hjust = .75, 
-                                 nbreaks = 11, 
-                                 palette = "RdBu", 
-                                 label = TRUE, 
-                                 label_color = "black", 
-                                 digits = 2, 
-                                 label_round = 2, 
-                                 label_size = 2) + 
-                                    theme(legend.position = "none")
-
-# ggsave("tough.svg", path = "../figs/corrPlot-crit_vars.svg")
 
 # personality subscales
 pscale = list(
@@ -123,24 +94,7 @@ pscaleCorrs = lapply(pscale,
                     function(x) psych::corr.test(x, use = "pairwise"))
 
 # plot personality subscale correlations
-pscale.corrPlots = lapply(
-  pscaleCorrs,
-  function(df) {
-    ggcorr(data = NULL,
-           cor_matrix = df[["r"]],
-           #method = c("pairwise", "pearson"),
-           size = 3,
-           hjust = .75,
-           nbreaks = 11,
-           palette = "RdBu",
-           label = TRUE, 
-           label_color = "black",
-           digits = 2,
-           #angle = -45, 
-           label_round = 2, 
-           label_size = 2) + 
-      theme(legend.position = "none")
-  })
+pscale.corrPlots = lapply(pscaleCorrs, function(x) corrPlot_func(x[["r"]]))
 
 pscale.names = sapply(pscale, names)
 
@@ -197,24 +151,8 @@ pscaleRevCorrs = lapply(psubscales.reversed,
 # pscaleReversedPolyCorrs = lapply(psubscales.reversed, 
 #                              function(x) psych::polychoric(x, na.rm = TRUE))
 
-pscale.reversed.corrPlots = lapply(
-  pscaleRevCorrs,
-  function(df) {
-    ggcorr(data = NULL,
-           cor_matrix = df[["r"]], #df[["rho]], #when using polychoric corrs
-           #method = c("pairwise", "pearson"),
-           size = 3,
-           hjust = .75,
-           nbreaks = 11,
-           palette = "RdBu",
-           label = TRUE, 
-           label_color = "black",
-           digits = 2,
-           #angle = -45, 
-           label_round = 2, 
-           label_size = 2) + 
-      theme(legend.position = "none")
-  }) 
+pscale.reversed.corrPlots = lapply(pscaleRevCorrs, 
+                                   function(x) corrPlot_func(x[["r"]]))
 ######everything looks good######
 
 # export plots
@@ -226,8 +164,10 @@ for (i in 1:length(pscale.names)){
 }
 
 # make 13 composite scores and put back to feats
-feats$pcomp <- as.data.frame(do.call(cbind, lapply(psubscales.reversed, 
-                                                   function(x) rowMeans(x))))
+feats$pcomp <- as.data.frame(
+  do.call(cbind, lapply(psubscales.reversed, 
+                        function(x) rowMeans(x, na.rm = TRUE))
+          ))
 
 # write each feature as a separate sheet 
 # save into one xslx file
