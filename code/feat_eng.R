@@ -5,7 +5,7 @@ rm(list = ls()) #keep env clean
 #set working dir - shortcut = ctrl + shift + H
 
 #load libraries
-library(tidyverse, quietly = TRUE) #dplyr masks stats::filter, lag
+library(tidyverse) #dplyr masks stats::filter, lag
 
 #load data from github repo
 datFile = "https://raw.githubusercontent.com/dkgreen24/siop-ml-competition/master/data/train.csv"
@@ -142,30 +142,36 @@ pscale.corrPlots = lapply(
       theme(legend.position = "none")
   })
 
+pscale.names = sapply(pscale, names)
+
 # export plots
 for (i in 1:length(pscale.names)){
   pscale.corrPlots[i]
-  ggsave(file=paste0("figs/corrPlot-psubscales/",pscale.names[i],".png"))
+  ggsave(pscale.corrPlots[[i]], 
+         file=paste0("../figs/corrPlot-pscales/",names(pscale.names[i]),".png"))
 }
 
-"Items that needs to be reverse coded:
-pscale01: q2, q3
-pscale02: q2
-pscale03: q1
-pscale04: q1
-pscale05: na
-pscale06: q3, q6
-pscale07: q2
-pscale08: q2, q4
-pscale09: q2
-pscale10: q3, q4
-pscale11: q2, q3
-pscale12: q3, q4
-pscale13: q3, q4
-"
+# "Items that needs to be reverse coded:
+# pscale01: q2, q3
+# pscale02: q2
+# pscale03: q1
+# pscale04: q1
+# pscale05: na
+# pscale06: q3, q6
+# pscale07: q2
+# pscale08: q2, q4
+# pscale09: q2
+# pscale10: q3, q4
+# pscale11: q2, q3
+# pscale12: q3, q4
+# pscale13: q3, q4
+# "
+
 # reverse code personality items
 keys <- rep(1,55)  # key filler
-keys[c(2,3,6,9,13,23,26,28,32,34,36,41,42,44,45,49,50,53,54)] <- -1 # index of reversed items
+
+# index of reversed items
+keys[c(2,3,6,9,13,23,26,28,32,34,36,41,42,44,45,49,50,53,54)] <- -1 
 pscale.reversed <- as.data.frame(reverse.code(keys,feats$pscale))
 
 # group processed items & check correlations
@@ -185,14 +191,17 @@ psubscales.reversed = list(
   pscale12 = select_at(pscale.reversed, vars(contains("pscale12"))),
   pscale13 = select_at(pscale.reversed, vars(contains("pscale13"))))
 
-pscaleReversedCorrs = lapply(psubscales.reversed, 
-                     function(x) psych::corr.test(x, use = "pairwise"))
+pscaleRevCorrs = lapply(psubscales.reversed, 
+                        function(x) psych::corr.test(x, use = "pairwise"))
+
+# pscaleReversedPolyCorrs = lapply(psubscales.reversed, 
+#                              function(x) psych::polychoric(x, na.rm = TRUE))
 
 pscale.reversed.corrPlots = lapply(
-  pscaleReversedCorrs,
+  pscaleRevCorrs,
   function(df) {
     ggcorr(data = NULL,
-           cor_matrix = df[["r"]],
+           cor_matrix = df[["r"]], #df[["rho]], #when using polychoric corrs
            #method = c("pairwise", "pearson"),
            size = 3,
            hjust = .75,
@@ -208,14 +217,17 @@ pscale.reversed.corrPlots = lapply(
   }) 
 ######everything looks good######
 
-# export graphs
+# export plots
 for (i in 1:length(pscale.names)){
   pscale.reversed.corrPlots[i]
-  ggsave(file=paste0("figs/corrPlot-psubscales-reversed/",pscale.names[i],".png"))
+  ggsave(pscale.reversed.corrPlots[[i]], 
+         file=paste0("../figs/corrPlot-pscales-rev/",names(pscale.names[i]),
+                     ".png"))
 }
 
 # make 13 composite scores and put back to feats
-feats$pcomp <- as.data.frame(do.call(cbind, lapply(psubscales.reversed, function(x) rowMeans(x))))
+feats$pcomp <- as.data.frame(do.call(cbind, lapply(psubscales.reversed, 
+                                                   function(x) rowMeans(x))))
 
 # write each feature as a separate sheet 
 # save into one xslx file
@@ -227,5 +239,5 @@ for (i in 1:length(feat.names)){
   addWorksheet(wb, feat.names[i])
   writeData(wb, feat.names[i], feats[[i]])
 }
-saveWorkbook(wb, file = "data/features.xlsx", overwrite = TRUE)
+saveWorkbook(wb, file = "../data/features.xlsx", overwrite = TRUE)
 
